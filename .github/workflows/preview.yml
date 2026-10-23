@@ -1,0 +1,67 @@
+# chunk-lab/lab の好きなブランチを組み立てて、https で見られるようにする(確認用)。
+# 使い方: Actions → preview → Run workflow → 見たいブランチ名を入れる(空なら polish)
+# できる場所: https://chunk-lab.github.io/lab-preview/ (統合アプリは /town/ 、3Dの町だけは /town3d/)
+name: preview
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 見たい lab のブランチ(空なら polish)
+        required: false
+        default: polish
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: chunk-lab/lab
+          ref: ${{ inputs.branch || 'polish' }}
+          path: lab
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 3Dの町を組み立てる
+        working-directory: lab/town3d
+        run: npm i --no-audit --no-fund && node build.mjs
+      - name: 統合アプリ(街)を組み立てる
+        working-directory: lab/series
+        run: npm i --no-audit --no-fund && node build.mjs town
+      - name: 置き場にまとめる
+        run: |
+          mkdir -p site/town3d
+          cp -r lab/series/dist/town site/town
+          cp lab/town3d/dist/index.html site/town3d/index.html
+          B="${{ inputs.branch || 'polish' }}"; S="$(git -C lab rev-parse --short HEAD)"; D="$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')"
+          cat > site/index.html <<HTML
+          <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>lab 確認用</title>
+          <body style="font-family:sans-serif;max-width:32em;margin:2em auto;padding:0 1em;line-height:1.8">
+          <h1>lab 確認用</h1>
+          <p>ブランチ <b>$B</b>(commit $S)を $D に組み立てました。</p>
+          <p><a href="town/">統合アプリ(チャンクタウン)</a></p>
+          <p><a href="town3d/">3Dの町だけ</a></p>
+          </body>
+          HTML
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.dep.outputs.page_url }}
+    steps:
+      - id: dep
+        uses: actions/deploy-pages@v4
