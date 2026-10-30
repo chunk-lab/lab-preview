@@ -41,6 +41,7 @@ jobs:
           mkdir -p site/town3d
           cp -r lab/series/dist/town site/town
           cp lab/town3d/dist/index.html site/town3d/index.html
+          cp -r lab/town3d/dist/tarot site/town3d/tarot
           B="${{ inputs.branch || 'polish' }}"; S="$(git -C lab rev-parse --short HEAD)"; D="$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')"
           cat > site/index.html <<HTML
           <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
