@@ -36,7 +36,10 @@ async function check(name, url, enter) {
   await page.goto(url, { waitUntil: 'load' });
   await sleep(2500);
   await enter(page);
-  await sleep(enter.models ? 15000 : 3000);   // モデルの読みこみ待ち
+  if (enter.models) {   // モデルの読みこみ待ち(順番に読むので、全部そろうまで最大60秒)
+    for (let t = 0; t < 60; t++) { await sleep(1000); const n = await page.evaluate(() => Object.keys(window.__glbFeet || {}).length).catch(() => 0); if (t > 8 && n >= glb.size && [...glb.values()].length >= 13) break; }
+    await sleep(3000);
+  } else await sleep(3000);
   if (!enter.models) { const ok = !errors.length && !bad.length; console.log(`${ok ? 'OK ' : 'NG '} ${name}`); for (const e of errors) console.log('   画面のエラー:', e.slice(0, 200)); for (const b of bad) console.log('   読みこみ失敗:', b); if (!ok) failed = true; await page.close(); return; }
   const ver = await page.evaluate(async u => { try { return await (await fetch(u)).json(); } catch (e) { return null; } }, new URL(name === 'town' ? 'g/town3d/models/versions.json' : 'models/versions.json', url).href);
   const want = ver ? Object.keys(ver).filter(f => f.endsWith('.glb')) : [];
