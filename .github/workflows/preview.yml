@@ -1,69 +1,187 @@
-# chunk-lab/lab の好きなブランチを組み立てて、https で見られるようにする(確認用)。
-# 使い方: Actions → preview → Run workflow → 見たいブランチ名を入れる(空なら polish)
-# できる場所: https://chunk-lab.github.io/lab-preview/ (統合アプリは /town/ 、3Dの町だけは /town3d/)
+# chunk-lab/lab の各ブランチを自動で組み立て、点検に通ったものだけを https で見られるようにする(確認用)。
+#
+# 見る場所(https://chunk-lab.github.io/lab-preview/)
+#   /town/  /town3d/            … polish(統合ブランチ)。いつもここが最新の polish
+#   /b/<ブランチ名>/town/        … それぞれのブランチ(ブランチ名の / は - に)
+#   /                            … 一覧(どのブランチが、いつ、どの commit で、点検OKか)
+#
+# いつ組み立てるか
+#   - 10分ごとに lab のブランチを見て、変わったものだけ自動で(手で何かする必要はない)
+#   - すぐ見たいとき: Actions → preview → Run workflow → ブランチ名(空なら変わったもの全部)
+#
+# 点検(tools/smoke.mjs): 本物のブラウザで /town/ と /town3d/ を開き、画面のエラー・読みこみ失敗・
+#   住人の3Dモデルの読みこみを確かめる。だめなら、そのブランチは前のOKの版のまま置いておき、一覧に「NG」と理由を出す。
+#
+# lab が非公開になったら: lab を読める鍵を secrets.LAB_TOKEN に入れる(なければ公開リポジトリとして読む)。
 name: preview
 on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 見たい lab のブランチ(空なら polish)
+        description: 組み立てる lab のブランチ(空なら、変わったブランチ全部)
         required: false
-        default: polish
+        default: ''
+  schedule:
+    - cron: '*/10 * * * *'
   push:
     branches: [main]
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      LAB: chunk-lab/lab
+      TOKEN: ${{ secrets.LAB_TOKEN || github.token }}
+      MAX_BRANCHES: 4          # 1回に組み立てる数(多すぎると時間がかかる)
+      KEEP_DAYS: 21            # この日数さわられていないブランチは一覧から外す
+      MAX_MB: 850              # 置き場全体の上限(MB)。こえたら古いブランチから外す
+    outputs:
+      changed: ${{ steps.pick.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: chunk-lab/lab
-          ref: ${{ inputs.branch || 'polish' }}
-          path: lab
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: 3Dの町を組み立てる
-        working-directory: lab/town3d
-        run: npm i --no-audit --no-fund && node build.mjs
-      - name: 統合アプリ(街)を組み立てる
-        working-directory: lab/series
-        run: npm i --no-audit --no-fund && node build.mjs town
-      - name: 置き場にまとめる
+      - name: これまでの置き場(site ブランチ)を取ってくる
         run: |
-          mkdir -p site/town3d
-          cp -r lab/series/dist/town site/town
-          cp lab/town3d/dist/index.html site/town3d/index.html
-          cp -r lab/town3d/dist/tarot site/town3d/tarot
-          if [ -d lab/town3d/dist/models ]; then cp -r lab/town3d/dist/models site/town3d/models; fi
-          B="${{ inputs.branch || 'polish' }}"; S="$(git -C lab rev-parse --short HEAD)"; D="$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')"
-          cat > site/index.html <<HTML
-          <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-          <title>lab 確認用</title>
-          <body style="font-family:sans-serif;max-width:32em;margin:2em auto;padding:0 1em;line-height:1.8">
-          <h1>lab 確認用</h1>
-          <p>ブランチ <b>$B</b>(commit $S)を $D に組み立てました。</p>
-          <p><a href="town/">統合アプリ(チャンクタウン)</a></p>
-          <p><a href="town3d/">3Dの町だけ</a></p>
-          </body>
-          HTML
+          if git ls-remote --exit-code --heads origin site >/dev/null; then
+            git fetch -q --depth 1 origin site && git worktree add -q site origin/site
+          else
+            mkdir site
+          fi
+          mkdir -p site/b
+      - name: 組み立てるブランチを決める
+        id: pick
+        run: |
+          api() { curl -fsSL -H "Authorization: Bearer $TOKEN" "https://api.github.com/repos/$LAB/$1"; }
+          api "branches?per_page=100" > /tmp/branches.json
+          node -e '
+            const fs=require("fs"); const all=JSON.parse(fs.readFileSync("/tmp/branches.json"));
+            const want=process.env.WANT;
+            const skip=/^(main|town3d-preview|preview\/|series-preview\/|archive\/)/;
+            const safe=b=>b.replace(/[^A-Za-z0-9._-]/g,"-");
+            const list=[];
+            for (const b of all) {
+              if (want ? b.name!==want : skip.test(b.name)) continue;
+              const f="site/b/"+safe(b.name)+"/.sha"; const old=fs.existsSync(f)?fs.readFileSync(f,"utf8").trim():"";
+              if (want || old!==b.commit.sha) list.push(b.name);
+            }
+            list.sort((a,b)=>(b==="polish")-(a==="polish"));   // polish を先に
+            fs.writeFileSync("/tmp/todo.txt", list.slice(0, +process.env.MAX_BRANCHES).join("\n"));
+            fs.writeFileSync("/tmp/alive.txt", all.map(b=>safe(b.name)).join("\n"));
+          '
+          echo "組み立てる: $(tr '\n' ' ' < /tmp/todo.txt)"
+          if [ -s /tmp/todo.txt ] || [ "${{ github.event_name }}" = "push" ]; then echo changed=1 >> $GITHUB_OUTPUT; else echo changed=0 >> $GITHUB_OUTPUT; fi
+        env:
+          WANT: ${{ inputs.branch }}
+      - name: 点検の道具(ブラウザ)を用意
+        if: steps.pick.outputs.changed == '1'
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm i --no-audit --no-fund playwright@1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: ブランチごとに 組み立て → 点検 → 置く
+        if: steps.pick.outputs.changed == '1'
+        run: |
+          set +e
+          TZ=Asia/Tokyo; export TZ
+          while read -r B; do
+            [ -z "$B" ] && continue
+            S=$(echo "$B" | sed 's/[^A-Za-z0-9._-]/-/g')
+            echo "::group::$B"
+            rm -rf lab out log.txt /tmp/result; mkdir out
+            {
+              git clone -q --depth 1 -b "$B" "https://x-access-token:${TOKEN}@github.com/$LAB" lab || exit 1
+              SHA=$(git -C lab rev-parse HEAD)
+              ok=1
+              if [ -d lab/town3d ]; then
+                (cd lab/town3d && npm i --no-audit --no-fund && BUILD_BRANCH="$B" node build.mjs) || ok=0
+                [ $ok = 1 ] && cp -r lab/town3d/dist out/town3d && rm -f out/town3d/index.html.map
+              fi
+              if [ $ok = 1 ] && [ -d lab/series ]; then
+                (cd lab/series && npm i --no-audit --no-fund && BUILD_BRANCH="$B" node build.mjs) || ok=0   # 統合アプリ+単体アプリ全部
+                if [ $ok = 1 ]; then
+                  cp -r lab/series/dist/town out/town
+                  mkdir -p out/apps; for a in lab/series/dist/*/; do n=$(basename "$a"); [ "$n" != town ] && cp -r "$a" out/apps/$n; done
+                fi
+              fi
+              if [ $ok = 1 ]; then
+                (cd out && python3 -m http.server 8080 >/dev/null 2>&1 &) ; sleep 2
+                PW_MODULE=/tmp/pw/node_modules/playwright/index.mjs APPS="$(ls out/apps 2>/dev/null | tr '\n' ' ')" node tools/smoke.mjs http://localhost:8080/ || ok=0
+                pkill -f "http.server 8080"
+              fi
+              echo "SHA=$SHA OK=$ok" > /tmp/result
+            } 2>&1 | tee log.txt
+            . /tmp/result 2>/dev/null || { SHA=""; OK=0; }
+            D=site/b/$S
+            mkdir -p "$D"
+            if [ "$OK" = 1 ]; then
+              rm -rf "$D"/town "$D"/town3d "$D"/apps; cp -r out/. "$D"/
+              echo "$SHA" > "$D/.sha"; echo "OK $(date '+%m-%d %H:%M') ${SHA:0:7}" > "$D/.status"; rm -f "$D/ng.txt"
+              if [ "$B" = polish ]; then rm -rf site/town site/town3d site/apps; cp -r out/. site/; fi
+            else
+              echo "$SHA" > "$D/.sha"   # 同じ commit を何度も組み立て直さない(直してプッシュすれば、また組み立てる)
+              echo "NG $(date '+%m-%d %H:%M') ${SHA:0:7}" > "$D/.status"
+              tail -n 60 log.txt > "$D/ng.txt"
+            fi
+            echo "::endgroup::"
+          done < /tmp/todo.txt
+      - name: 消えたブランチ・古いブランチを片づけて、一覧を作る
+        if: steps.pick.outputs.changed == '1'
+        run: |
+          TZ=Asia/Tokyo; export TZ
+          for d in site/b/*/; do
+            n=$(basename "$d")
+            if ! grep -qx "$n" /tmp/alive.txt || [ -n "$(find "$d" -maxdepth 0 -mtime +$KEEP_DAYS)" ]; then rm -rf "$d"; fi
+          done
+          {
+            echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab 確認用</title>'
+            echo '<body style="font-family:sans-serif;max-width:40em;margin:2em auto;padding:0 1em;line-height:1.8">'
+            echo "<h1>lab 確認用</h1><p>更新: $(date '+%Y-%m-%d %H:%M') JST(10分ごとに自動)</p>"
+            echo '<p><b>polish(いつもの)</b>: <a href="town/">統合アプリ</a> ・ <a href="town3d/">3Dの町だけ</a>'
+            for a in site/apps/*/; do [ -d "$a" ] && n=$(basename "$a") && echo " ・ <a href=\"apps/$n/\">$n</a>"; done
+            echo '</p><h2>ブランチ</h2><ul>'
+            for d in site/b/*/; do
+              n=$(basename "$d"); st=$(cat "$d/.status" 2>/dev/null)
+              links=""; [ -d "$d/town" ] && links="$links <a href=\"b/$n/town/\">統合アプリ</a>"; [ -d "$d/town3d" ] && links="$links <a href=\"b/$n/town3d/\">3Dの町</a>"; for a in "$d"apps/*/; do [ -d "$a" ] && m=$(basename "$a") && links="$links <a href=\"b/$n/apps/$m/\">$m</a>"; done
+              case "$st" in NG*) st="<span style=\"color:#c00\">$st</span> <a href=\"b/$n/ng.txt\">理由</a>(表示は前のOKの版)";; esac
+              echo "<li><b>$n</b> — $st —$links</li>"
+            done
+            echo '</ul></body>'
+          } > site/index.html
+          touch site/.nojekyll
+          # 容量の上限(GitHub Pages は 1GB)に近づいたら、さわられていない古いブランチから外す(polish は外さない)
+          while [ "$(du -sm site --exclude=.git | cut -f1)" -gt "$MAX_MB" ]; do
+            old=$(ls -1dt site/b/*/ 2>/dev/null | grep -v '/polish/$' | tail -1); [ -z "$old" ] && break
+            echo "容量のため外す: $old"; rm -rf "$old"
+          done
+      - name: 置き場を保存(履歴は残さず1つだけ。容量をふくらませない)
+        if: steps.pick.outputs.changed == '1'
+        run: |
+          cd site && rm -f .git
+          git init -q && git checkout -q -b site && git add -A
+          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com commit -q -m "site $(date -u +%FT%TZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" site
+          du -sh .
       - uses: actions/configure-pages@v5
+        if: steps.pick.outputs.changed == '1'
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pick.outputs.changed == '1'
         with:
           path: site
   deploy:
     needs: build
+    if: needs.build.outputs.changed == '1'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.dep.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: dep
+      - id: deployment
         uses: actions/deploy-pages@v4
