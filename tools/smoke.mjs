@@ -13,7 +13,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'],
 });
 // なくても動く作りのファイル(無いと 404 になるのが正常)
-const OPTIONAL = [/\/apps\/hunt\.json/];
+const OPTIONAL = [/\/apps\/hunt\.json/, /\/models\/versions\.json/];   // versions.json は点検が自分で読みにいくもの(モデルのない古いブランチには無い)
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const clickText = (page, re) => page.evaluate(src => {
   const re = new RegExp(src);
