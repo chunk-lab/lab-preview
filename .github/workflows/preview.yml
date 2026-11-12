@@ -1,7 +1,7 @@
 # chunk-lab/lab の各ブランチを自動で組み立て、点検に通ったものだけを https で見られるようにする(確認用)。
 #
 # 見る場所(https://chunk-lab.github.io/lab-preview/)
-#   /town/  /town3d/            … polish(統合ブランチ)。いつもここが最新の polish
+#   /town/                      … polish(統合ブランチ)の統合アプリ。いつもここが最新の polish(3Dの町だけのページは点検にだけ使い、公開しない)
 #   /b/<ブランチ名>/town/        … それぞれのブランチ(ブランチ名の / は - に)
 #   /                            … 一覧(どのブランチが、いつ、どの commit で、点検OKか)
 #
@@ -125,6 +125,7 @@ jobs:
             . /tmp/result 2>/dev/null || { SHA=""; OK=0; }
             D=site/b/$S
             mkdir -p "$D"; echo "$TOOL" > "$D/.tool"
+            rm -rf out/town3d   # 3Dの町だけのページは点検にだけ使い、公開しない(見るのは統合アプリだけ)
             if [ "$OK" = 1 ]; then
               rm -rf "$D"/town "$D"/town3d "$D"/apps; cp -r out/. "$D"/
               echo "$SHA" > "$D/.sha"; echo "OK $(date '+%m-%d %H:%M') ${SHA:0:7}" > "$D/.status"; rm -f "$D/ng.txt"
@@ -140,6 +141,7 @@ jobs:
         if: steps.pick.outputs.changed == '1'
         run: |
           TZ=Asia/Tokyo; export TZ
+          rm -rf site/town3d site/b/*/town3d   # 前に公開していた「3Dの町だけ」を片づける
           for d in site/b/*/; do
             n=$(basename "$d")
             if ! grep -qx "$n" /tmp/alive.txt || [ -n "$(find "$d" -maxdepth 0 -mtime +$KEEP_DAYS)" ]; then rm -rf "$d"; fi
@@ -148,12 +150,12 @@ jobs:
             echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab 確認用</title>'
             echo '<body style="font-family:sans-serif;max-width:40em;margin:2em auto;padding:0 1em;line-height:1.8">'
             echo "<h1>lab 確認用</h1><p>更新: $(date '+%Y-%m-%d %H:%M') JST(lab にプッシュしたとき自動)</p>"
-            echo '<p><b>polish(いつもの)</b>: <a href="town/">統合アプリ</a> ・ <a href="town3d/">3Dの町だけ</a>'
+            echo '<p><b>polish(いつもの)</b>: <a href="town/">統合アプリ</a>'
             for a in site/apps/*/; do [ -d "$a" ] && n=$(basename "$a") && echo " ・ <a href=\"apps/$n/\">$n</a>"; done
             echo '</p><h2>ブランチ</h2><ul>'
             for d in site/b/*/; do
               n=$(basename "$d"); st=$(cat "$d/.status" 2>/dev/null)
-              links=""; [ -d "$d/town" ] && links="$links <a href=\"b/$n/town/\">統合アプリ</a>"; [ -d "$d/town3d" ] && links="$links <a href=\"b/$n/town3d/\">3Dの町</a>"; for a in "$d"apps/*/; do [ -d "$a" ] && m=$(basename "$a") && links="$links <a href=\"b/$n/apps/$m/\">$m</a>"; done
+              links=""; [ -d "$d/town" ] && links="$links <a href=\"b/$n/town/\">統合アプリ</a>"; for a in "$d"apps/*/; do [ -d "$a" ] && m=$(basename "$a") && links="$links <a href=\"b/$n/apps/$m/\">$m</a>"; done
               case "$st" in NG*) st="<span style=\"color:#c00\">$st</span> <a href=\"b/$n/ng.txt\">理由</a>(表示は前のOKの版)";; esac
               echo "<li><b>$n</b> — $st —$links</li>"
             done
