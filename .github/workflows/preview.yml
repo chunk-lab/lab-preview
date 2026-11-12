@@ -70,8 +70,10 @@ jobs:
             const list=[];
             for (const b of all) {
               if (want ? b.name!==want : skip.test(b.name)) continue;
-              const f="site/b/"+safe(b.name)+"/.sha"; const old=fs.existsSync(f)?fs.readFileSync(f,"utf8").trim():"";
-              if (want || old!==b.commit.sha) list.push(b.name);
+              const d="site/b/"+safe(b.name)+"/"; const rd=f=>fs.existsSync(d+f)?fs.readFileSync(d+f,"utf8").trim():"";
+              // NG だったブランチは、点検の道具が直ったら(TOOL が変わったら)もう一度組み立てる
+              const retry = rd(".status").startsWith("NG") && rd(".tool")!==process.env.TOOL;
+              if (want || rd(".sha")!==b.commit.sha || retry) list.push(b.name);
             }
             list.sort((a,b)=>(b==="polish")-(a==="polish"));   // polish を先に
             fs.writeFileSync("/tmp/todo.txt", list.slice(0, +process.env.MAX_BRANCHES).join("\n"));
@@ -81,6 +83,7 @@ jobs:
           if [ -s /tmp/todo.txt ] || [ "${{ github.event_name }}" = "push" ]; then echo changed=1 >> $GITHUB_OUTPUT; else echo changed=0 >> $GITHUB_OUTPUT; fi
         env:
           WANT: ${{ inputs.branch }}
+          TOOL: ${{ hashFiles('tools/smoke.mjs', '.github/workflows/preview.yml') }}
       - name: 点検の道具(ブラウザ)を用意
         if: steps.pick.outputs.changed == '1'
         run: |
@@ -88,6 +91,8 @@ jobs:
           npx playwright install --with-deps chromium >/dev/null
       - name: ブランチごとに 組み立て → 点検 → 置く
         if: steps.pick.outputs.changed == '1'
+        env:
+          TOOL: ${{ hashFiles('tools/smoke.mjs', '.github/workflows/preview.yml') }}
         run: |
           set +e
           TZ=Asia/Tokyo; export TZ
@@ -120,7 +125,7 @@ jobs:
             } 2>&1 | tee log.txt
             . /tmp/result 2>/dev/null || { SHA=""; OK=0; }
             D=site/b/$S
-            mkdir -p "$D"
+            mkdir -p "$D"; echo "$TOOL" > "$D/.tool"
             if [ "$OK" = 1 ]; then
               rm -rf "$D"/town "$D"/town3d "$D"/apps; cp -r out/. "$D"/
               echo "$SHA" > "$D/.sha"; echo "OK $(date '+%m-%d %H:%M') ${SHA:0:7}" > "$D/.status"; rm -f "$D/ng.txt"
