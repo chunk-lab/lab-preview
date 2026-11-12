@@ -6,8 +6,9 @@
 #   /                            … 一覧(どのブランチが、いつ、どの commit で、点検OKか)
 #
 # いつ組み立てるか
-#   - 10分ごとに lab のブランチを見て、変わったものだけ自動で(手で何かする必要はない)
-#   - すぐ見たいとき: Actions → preview → Run workflow → ブランチ名(空なら変わったもの全部)
+#   - lab にプッシュしたとき(lab の .github/workflows/preview-trigger.yml がここを呼ぶ)。変わったブランチだけ組み立てる
+#   - 手で動かすとき: Actions → preview → Run workflow(ブランチ名は空でよい。変わったもの全部)
+#   ※定期的には動かさない(Actions の時間をむだにしない)
 #
 # 点検(tools/smoke.mjs): 本物のブラウザで /town/ と /town3d/ を開き、画面のエラー・読みこみ失敗・
 #   住人の3Dモデルの読みこみを確かめる。だめなら、そのブランチは前のOKの版のまま置いておき、一覧に「NG」と理由を出す。
@@ -21,8 +22,6 @@ on:
         description: 組み立てる lab のブランチ(空なら、変わったブランチ全部)
         required: false
         default: ''
-  schedule:
-    - cron: '*/10 * * * *'
   push:
     branches: [main]
 permissions:
@@ -148,7 +147,7 @@ jobs:
           {
             echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>lab 確認用</title>'
             echo '<body style="font-family:sans-serif;max-width:40em;margin:2em auto;padding:0 1em;line-height:1.8">'
-            echo "<h1>lab 確認用</h1><p>更新: $(date '+%Y-%m-%d %H:%M') JST(10分ごとに自動)</p>"
+            echo "<h1>lab 確認用</h1><p>更新: $(date '+%Y-%m-%d %H:%M') JST(lab にプッシュしたとき自動)</p>"
             echo '<p><b>polish(いつもの)</b>: <a href="town/">統合アプリ</a> ・ <a href="town3d/">3Dの町だけ</a>'
             for a in site/apps/*/; do [ -d "$a" ] && n=$(basename "$a") && echo " ・ <a href=\"apps/$n/\">$n</a>"; done
             echo '</p><h2>ブランチ</h2><ul>'
