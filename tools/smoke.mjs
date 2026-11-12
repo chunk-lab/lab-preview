@@ -44,9 +44,9 @@ async function check(name, url, enter) {
   const ver = await page.evaluate(async u => { try { return await (await fetch(u)).json(); } catch (e) { return null; } }, new URL(name === 'town' ? 'g/town3d/models/versions.json' : 'models/versions.json', url).href);
   const want = ver ? Object.keys(ver).filter(f => f.endsWith('.glb')) : [];
   const missing = want.filter(f => glb.get(f) !== 200);
-  // 住人の足元: 地面(0)から大きくずれていたら(埋まる・浮く)だめ。歩いている途中の上下があるので 6cm まで許す
+  // 住人の足元: 埋まっている(4cmより下)か、大きく浮いている(12cmより上)とだめ。歩くと一瞬足が浮くのはふつう
   const feet = await page.evaluate(() => Object.entries(window.__glbFeet || {}).map(([k, f]) => { try { return [k, f()]; } catch (e) { return [k, null]; } }));
-  const sunk = feet.filter(([, v]) => v && Math.abs(v.foot) > 0.06).map(([k, v]) => `${k}(${v.foot})`);
+  const sunk = feet.filter(([, v]) => v && (v.foot < -0.04 || v.foot > 0.12)).map(([k, v]) => `${k}(${v.foot})`);
   if (sunk.length) { errors.push('足元が地面からずれている: ' + sunk.join(' ')); }
   const needModels = want.length > 0;   // モデルがまだ無い古いブランチは、モデルの点検をしない
   const ok = !errors.length && !bad.length && (!needModels || (glb.size > 0 && !missing.length));
