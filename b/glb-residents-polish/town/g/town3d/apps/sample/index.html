@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>まちの学校</title>
+<style>
+body{margin:0;font-family:"Hiragino Maru Gothic ProN","Noto Sans JP",system-ui,sans-serif;background:#fff8f3;color:#5a4a6b}
+main{max-width:520px;margin:0 auto;padding:22px}
+h1{font-size:20px;margin:4px 0 2px}.sub{color:#8d7f9e;font-size:13px;margin:0 0 16px}
+.q{background:#fff;border-radius:20px;padding:18px;box-shadow:0 6px 18px rgba(90,74,107,.12)}
+.s{font-size:20px;font-weight:800;margin:6px 0 14px;letter-spacing:.02em}
+.ops{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{border:2px solid #eadff3;background:#fff;border-radius:999px;padding:12px;font:inherit;font-weight:800;color:#5a4a6b;cursor:pointer}
+button.ok{background:#a8e6cf;border-color:#a8e6cf}button.ng{background:#ffd3d9;border-color:#ffd3d9}
+.msg{min-height:24px;margin:12px 0 0;font-weight:700}
+.foot{margin-top:16px;font-size:12px;color:#8d7f9e}
+</style></head>
+<body><main>
+<h1>まちの学校 ― ちいさな練習</h1>
+<p class="sub" id="hi">空いているところに入る言葉をえらぼう。</p>
+<div class="q"><div class="s" id="s"></div><div class="ops" id="ops"></div><div class="msg" id="msg"></div></div>
+<p class="foot">これは「単発アプリを町に入れる」見本です。town-sdk.js を読み込むだけで、町のコインや保存とつながります。</p>
+</main>
+<script src="../../sdk/town-sdk.js"></script>
+<script>
+var Q=[['I ___ to school every day.',['go','goes','going','went'],0],['She ___ a cat.',['have','has','having','to have'],1],['We met ___ the station.',['at','on','of','for'],0],['He is ___ than me.',['tall','taller','tallest','more tall'],1],['They ___ soccer yesterday.',['play','plays','played','playing'],2],['I want ___ a cake.',['eat','eating','to eat','ate'],2]];
+var i=Math.floor(Math.random()*Q.length),score=0,done=0;
+TownSDK.onHello(function(c){ if(c&&c.player) document.getElementById('hi').textContent=c.player.name+'さん、いらっしゃい。空いているところに入る言葉をえらぼう。'; });
+function show(){var q=Q[i%Q.length];document.getElementById('s').textContent=q[0];var o=document.getElementById('ops');o.innerHTML='';
+ q[1].forEach(function(w,k){var b=document.createElement('button');b.textContent=w;b.onclick=function(){
+  if(k===q[2]){b.className='ok';score++;document.getElementById('msg').textContent='せいかい! 🪙+3';TownSDK.addCoins(3,'quiz');}
+  else{b.className='ng';document.getElementById('msg').textContent='おしい! こたえは '+q[1][q[2]];}
+  done++;TownSDK.event('answer',{correct:k===q[2]});
+  setTimeout(function(){i++;document.getElementById('msg').textContent='';if(done%5===0){TownSDK.save('best',score);}show();},900);};o.appendChild(b);});}
+show();
+</script></body></html>

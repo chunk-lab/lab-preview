@@ -1,0 +1,953 @@
+/* core/reader.css */
+.cs-reader {
+  --bg:#0f1b2d;
+  --bg2:#0b1524;
+  --surface:#172a45;
+  --surface2:#20395c;
+  --line:#2d4a72;
+  --ink:#eef2f7;
+  --muted:#8ea3bf;
+  --faint:#5d7391;
+  --accent:#ffb23e;
+  --good:#5fd49a;
+  --mid:#ffd166;
+  --bad:#ff6b6b;
+  --great:#7cc4ff;
+  --jp:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+  --en:"Lexend","Segoe UI",system-ui,sans-serif;
+  --cS:#7cc4ff;
+  --cV:#ff8f8f;
+  --cO:#8ee6a8;
+  --cI:#6fe0d8;
+  --cC:#ffb870;
+  --cP:#d6a8ff;
+  --cT:#ffd166;
+  --cM:#e6ecf5;
+  --cR:#e6ecf5;
+  --cF:#e6ecf5;
+  --cX:#9fb0c6;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.5 var(--jp);
+  color-scheme: dark;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  overflow: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.cs-reader > * {
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+.cs-reader button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.cs-reader button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.cs-reader [hidden] {
+  display: none !important;
+}
+.cs-reader .rdTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+}
+.cs-reader .gear {
+  white-space: nowrap;
+  flex: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.cs-reader .rdStory {
+  flex: 1;
+  min-width: 0;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-reader .rdModeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cs-reader .rdSeg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cs-reader .rdSeg button {
+  padding: 7px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  background: var(--surface2);
+  color: var(--muted);
+  border: 0;
+}
+.cs-reader .rdSeg button.on,
+.cs-reader .rdModeRow .gear.on {
+  background: var(--accent);
+  color: #2a1a00;
+}
+.cs-reader .rdQ {
+  touch-action: pan-y;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 6px;
+}
+.cs-reader .rdQText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.cs-reader .rdQNum {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.cs-reader .rdQText b {
+  font-size: 16px;
+  line-height: 1.4;
+}
+.cs-reader .rdAns {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--en);
+}
+.cs-reader .qNav {
+  width: 34px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  font-size: 26px;
+  color: var(--muted);
+  flex: none;
+}
+.cs-reader .qNav:disabled {
+  opacity: .3;
+}
+.cs-reader .rdChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-reader .rdChoices button {
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.cs-reader .rdChoices button.on {
+  border-color: var(--accent);
+  background: var(--surface2);
+}
+.cs-reader .rdGest {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  touch-action: none;
+  min-height: 0;
+}
+.cs-reader .rdPad {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 6px;
+  position: relative;
+  touch-action: none;
+  cursor: grab;
+  border: 1.5px dashed var(--line);
+  border-radius: 16px;
+  padding: 24px 6px 10px;
+  overflow: hidden;
+}
+.cs-reader .rdPadHint {
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--faint);
+  pointer-events: none;
+}
+.cs-reader .rdCtxBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+.cs-reader .rdCtx {
+  font-family: var(--en);
+  font-size: 14px;
+  color: var(--faint);
+  line-height: 1.4;
+  padding: 0 4px;
+}
+.cs-reader .rdCtx.far {
+  opacity: .55;
+}
+.cs-reader .rdLane {
+  position: relative;
+  background: var(--surface);
+  border-radius: 14px;
+  height: 92px;
+  overflow: hidden;
+  flex: none;
+  touch-action: none;
+  cursor: grab;
+}
+.cs-reader .strip {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+}
+.cs-reader .strip.step {
+  transition: transform .17s cubic-bezier(.3, 1.5, .5, 1);
+}
+.cs-reader .strip .w {
+  font-family: var(--en);
+  font-weight: 700;
+  font-size: var(--laneFont,20px);
+  color: var(--ink);
+  padding: 0 .28em;
+}
+.cs-reader .strip .w.rS {
+  color: var(--cS);
+}
+.cs-reader .strip .w.rV {
+  color: var(--cV);
+}
+.cs-reader .strip .w.rO {
+  color: var(--cO);
+}
+.cs-reader .strip .w.rI {
+  color: var(--cI);
+}
+.cs-reader .strip .w.rC {
+  color: var(--cC);
+}
+.cs-reader .strip .w.rP {
+  color: var(--cP);
+}
+.cs-reader .strip .w.rT {
+  color: var(--cT);
+}
+.cs-reader .strip .w.rM,
+.cs-reader .strip .w.rR,
+.cs-reader .strip .w.rF {
+  color: var(--cM);
+}
+.cs-reader .strip .w.rX {
+  color: var(--cX);
+}
+.cs-reader .strip .w.hl {
+  outline: 2px solid var(--accent);
+  border-radius: 6px;
+}
+.cs-reader .strip .w.sel {
+  background: rgba(255, 178, 62, .28);
+  border-radius: 6px;
+  color: var(--ink);
+}
+.cs-reader .cutmark {
+  display: inline-block;
+  font-weight: 700;
+}
+.cs-reader .cutmark.hint {
+  opacity: .35;
+  color: var(--muted);
+  font-size: calc(var(--laneFont,20px)*1.3);
+}
+.cs-reader .cutmark.brk {
+  color: var(--accent);
+  font-size: calc(var(--laneFont,20px)*1.2);
+  margin: 0 1px;
+}
+.cs-reader .cutline {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 178, 62, .6);
+  z-index: 2;
+  pointer-events: none;
+}
+.cs-reader .cutline::before {
+  content: attr(data-lbl);
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.cs-reader .rdLane.flash .cutline {
+  animation: csRdFlash .3s;
+}
+@keyframes csRdFlash {
+  50% {
+    width: 7px;
+    margin-left: -3.5px;
+    box-shadow: 0 0 18px var(--accent);
+  }
+}
+.cs-reader .fadeL {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background:
+    linear-gradient(
+      90deg,
+      var(--surface),
+      transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.cs-reader .fadeR {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+  background:
+    linear-gradient(
+      270deg,
+      var(--surface),
+      transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.cs-reader .rdInfo {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 34vh;
+  overflow: auto;
+  touch-action: pan-y;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.cs-reader .il {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 6px;
+}
+.cs-reader .ilItem {
+  display: flex;
+  flex-direction: column;
+  border-left: 3px solid var(--c,var(--line));
+  padding: 1px 8px 1px 6px;
+}
+.cs-reader .ilEn {
+  font-family: var(--en);
+  font-size: 15px;
+  font-weight: 700;
+}
+.cs-reader .ilJp {
+  font-size: 12px;
+  color: var(--muted);
+}
+.cs-reader .riJa {
+  color: var(--muted);
+  font-size: 13px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+.cs-reader .riNote {
+  font-size: 12px;
+  color: var(--muted);
+}
+.cs-reader .riBase {
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.cs-reader .riFull {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.cs-reader .posTag {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.cs-reader .roleTag {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 6px;
+  color: #0b0f17;
+  background: var(--muted);
+}
+.cs-reader .roleTag.rS {
+  background: var(--cS);
+}
+.cs-reader .roleTag.rV {
+  background: var(--cV);
+}
+.cs-reader .roleTag.rO {
+  background: var(--cO);
+}
+.cs-reader .roleTag.rI {
+  background: var(--cI);
+}
+.cs-reader .roleTag.rC {
+  background: var(--cC);
+}
+.cs-reader .roleTag.rP {
+  background: var(--cP);
+}
+.cs-reader .roleTag.rT {
+  background: var(--cT);
+}
+.cs-reader .roleTag.rM,
+.cs-reader .roleTag.rR,
+.cs-reader .roleTag.rF {
+  background: var(--cM);
+}
+.cs-reader .roleTag.rX {
+  background: var(--cX);
+}
+.cs-reader .rdSenNav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+.cs-reader .navBtn {
+  height: 34px;
+  width: 52px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface2);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ink);
+  touch-action: manipulation;
+}
+.cs-reader .navBtn.wide {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.cs-reader .navBtn:disabled {
+  opacity: .3;
+}
+.cs-reader .scrub {
+  width: 100%;
+  margin: 0;
+  height: 26px;
+  accent-color: var(--accent);
+  touch-action: pan-x;
+}
+.cs-reader .rdHelp {
+  text-align: center;
+  min-height: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.6;
+}
+.cs-reader .rdBtns {
+  display: flex;
+  gap: 8px;
+}
+.cs-reader .rdBtns button {
+  flex: 1;
+  border-radius: 14px;
+  padding: 13px;
+  font-weight: 800;
+  font-size: 15px;
+  border: 1px solid var(--line);
+  background: var(--surface2);
+  color: var(--ink);
+}
+.cs-reader .rdBtns .cutMain {
+  background: var(--accent);
+  color: #2a1a00;
+  border: 0;
+  box-shadow: 0 4px 0 #b87600;
+}
+.cs-reader .rdBtns .ok {
+  background: var(--good);
+  color: #06301c;
+  border: 0;
+}
+.cs-reader .rdCheck {
+  flex: none;
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -10px 16px var(--bg);
+}
+.cs-reader.vRead .rdQ,
+.cs-reader.vRead .rdChoices,
+.cs-reader.vRead .rdBtns,
+.cs-reader.vRead .rdCheck {
+  display: none;
+}
+.cs-reader .rdModal {
+  position: fixed;
+  inset: 0;
+  max-width: none;
+  background: rgba(6, 12, 22, .75);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 5;
+  padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.cs-reader .rdSheet {
+  width: 100%;
+  max-width: 500px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  box-sizing: border-box;
+  max-height: 90%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.cs-reader .rdSheet h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.cs-reader .note {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.6;
+}
+.cs-reader .big {
+  font-family: var(--en);
+  font-weight: 700;
+  font-size: 30px;
+  color: var(--accent);
+}
+.cs-reader .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.cs-reader .row select {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  max-width: 55%;
+}
+.cs-reader .btns {
+  display: flex;
+  gap: 8px;
+}
+.cs-reader .primary {
+  flex: 2;
+  background: var(--accent);
+  color: #2a1a00;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 800;
+  font-size: 15px;
+}
+.cs-reader .ghost {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.cs-reader .rvw {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cs-reader .rvw .lab {
+  font-size: 11px;
+  color: var(--muted);
+}
+.cs-reader .rvw .en {
+  font-family: var(--en);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.cs-reader .rvw .ja {
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 13px;
+}
+.cs-reader .mk {
+  display: inline-block;
+  font-weight: 800;
+  font-size: 13px;
+  margin-right: 4px;
+  vertical-align: 2px;
+}
+.cs-reader .mk.k-excellent {
+  color: var(--good);
+}
+.cs-reader .mk.k-good {
+  color: var(--mid);
+}
+.cs-reader .mk.k-miss {
+  color: var(--bad);
+}
+.cs-reader .spw {
+  padding: 1px 0;
+}
+.cs-reader .spE {
+  background: rgba(95, 212, 154, .25);
+  border-radius: 3px;
+}
+.cs-reader .spM {
+  border-bottom: 3px solid var(--accent);
+}
+.cs-reader .legendSp {
+  font-size: 11px;
+  color: var(--muted);
+}
+.cs-reader .why {
+  color: var(--muted);
+  font-size: 12px;
+  margin-left: 4px;
+}
+.cs-reader .rvAll {
+  margin: 14px 0 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.cs-reader .rvAllHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.cs-reader .rvAllHead button {
+  flex: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+.cs-reader .rvSen {
+  padding: 8px 10px;
+  border-radius: 10px;
+  margin-top: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.cs-reader .rvSen .en {
+  font-family: var(--en);
+  font-size: 15px;
+}
+.cs-reader .rvSen .ja {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cs-reader .rvSen.on {
+  background: rgba(255, 178, 62, .18);
+  border-color: var(--accent);
+}
+.cs-reader .rdCtxBox:empty {
+  display: none;
+}
+@media (max-height: 520px) {
+  .cs-reader {
+    gap: 5px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  .cs-reader .rdTop {
+    padding-top: 4px;
+  }
+  .cs-reader .rdPadHint,
+  .cs-reader .rdHelp {
+    display: none;
+  }
+  .cs-reader .rdPad {
+    padding: 6px;
+  }
+  .cs-reader .rdLane {
+    height: 68px;
+  }
+  .cs-reader .rdGest {
+    gap: 5px;
+    flex: none;
+  }
+  .cs-reader .rdInfo {
+    max-height: none;
+  }
+}
+
+/* core/ui.css */
+.cs-ui {
+  --cs-ink:#2b2320;
+  --cs-paper:#fffaf0;
+  --cs-wood:#8a5a32;
+  --cs-leaf:#4fa34a;
+  --cs-sun:#ffc93c;
+  font-family:
+    "Hiragino Maru Gothic ProN",
+    "Hiragino Sans",
+    "Noto Sans JP",
+    "M PLUS Rounded 1c",
+    system-ui,
+    sans-serif;
+}
+.cs-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 30, 40, .4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.cs-sheet {
+  width: min(100%, 480px);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--cs-paper);
+  color: var(--cs-ink);
+  border: 3px solid var(--cs-wood);
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  padding: 16px max(18px, env(safe-area-inset-left, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: csup .22s ease-out;
+}
+@keyframes csup {
+  from {
+    transform: translateY(100%);
+  }
+}
+.cs-sheet h3 {
+  margin: 0;
+  font-size: 20px;
+  text-align: center;
+}
+.cs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 14px;
+}
+.cs-row input[type=range] {
+  flex: 1;
+  max-width: 60%;
+}
+.cs-row input[type=checkbox] {
+  width: 22px;
+  height: 22px;
+}
+.cs-col {
+  flex-direction: column;
+  align-items: stretch;
+}
+.cs-col input {
+  font: inherit;
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 2px solid #ead9c2;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--cs-ink);
+}
+.cs-btn {
+  padding: 12px;
+  border-radius: 14px;
+  border: 2px solid var(--cs-wood);
+  background: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--cs-ink);
+  box-shadow: 0 3px 0 var(--cs-wood);
+  cursor: pointer;
+}
+.cs-close {
+  background: var(--cs-sun);
+}
+.cs-prof {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.cs-prof img {
+  width: 96px;
+  height: 96px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid #ead9c2;
+  flex: none;
+}
+.cs-prof > div {
+  flex: 1;
+  min-width: 0;
+}
+.cs-note {
+  margin: 0;
+  font-size: 12px;
+  color: #8a7766;
+  line-height: 1.6;
+}
+.cs-stat {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-stat li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fff;
+  border: 2px solid #ead9c2;
+  border-radius: 12px;
+  font-size: 14px;
+}
+.cs-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 110;
+  background: rgba(30, 30, 30, .88);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.cs-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #0b1626;
+}
+.cs-mount {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.cs-mount iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.cs-back {
+  position: fixed;
+  z-index: 60;
+  left: max(8px, env(safe-area-inset-left, 0px));
+  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #8a5a32;
+  background: #fffaf0;
+  font: inherit;
+  font-weight: 800;
+  font-size: 13px;
+  color: #2b2320;
+  box-shadow: 0 2px 0 #8a5a32;
+  opacity: .92;
+  cursor: pointer;
+}
+.cs-err {
+  color: #fff;
+  padding: 24px;
+  text-align: center;
+}
+[hidden] {
+  display: none !important;
+}
+.cs-row select {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  border: 2px solid #ead9c2;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--cs-ink);
+}
