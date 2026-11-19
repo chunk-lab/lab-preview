@@ -36,6 +36,7 @@ async function check(name, url, enter) {
   await page.goto(url, { waitUntil: 'load' });
   await sleep(2500);
   await enter(page);
+  await page.evaluate(() => { try { window.__glbLoadAll && window.__glbLoadAll(); } catch (e) { } }).catch(() => { });   // 町は出番の住人だけ読むので、点検では全員を読ませる
   if (enter.models) {   // モデルの読みこみ待ち(順番に読むので、全部そろうまで最大60秒)
     for (let t = 0; t < 60; t++) { await sleep(1000); const n = await page.evaluate(() => Object.keys(window.__glbFeet || {}).length).catch(() => 0); if (t > 8 && n >= glb.size && [...glb.values()].length >= 13) break; }
     await sleep(3000);
