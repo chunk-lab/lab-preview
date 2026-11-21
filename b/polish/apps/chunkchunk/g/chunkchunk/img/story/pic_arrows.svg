@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" font-family="'Zen Maru Gothic','M PLUS Rounded 1c','Hiragino Maru Gothic ProN',sans-serif">
+<rect width="320" height="200" rx="18" fill="#fff7d6"/>
+<line x1="160" y1="18" x2="160" y2="182" stroke="#e6d9a8" stroke-width="3" stroke-dasharray="6 6"/>
+<!-- ① 主役ひとりで終わる：矢印が自分に戻る -->
+<text x="20" y="32" font-size="20" font-weight="800" fill="#4b3a58">①</text>
+<circle cx="80" cy="92" r="22" fill="#c9e4ff" stroke="#8b6cc0" stroke-width="3"/>
+<circle cx="72" cy="88" r="3" fill="#4b3a58"/><circle cx="88" cy="88" r="3" fill="#4b3a58"/>
+<path d="M72 99q8 7 16 0" stroke="#4b3a58" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M104 70c26-30 52 10 8 18" stroke="#3fb489" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M110 79l4 10-12 1z" fill="#3fb489" stroke="#3fb489" stroke-width="3" stroke-linejoin="round"/>
+<text x="80" y="150" text-anchor="middle" font-size="15" font-weight="800" fill="#4b3a58">smiled.</text>
+<text x="80" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#8c7a99">ひとりで終わる</text>
+<!-- ② 主役から外へ：相手が必要 -->
+<text x="180" y="32" font-size="20" font-weight="800" fill="#4b3a58">②</text>
+<circle cx="205" cy="92" r="22" fill="#c9e4ff" stroke="#8b6cc0" stroke-width="3"/>
+<circle cx="197" cy="88" r="3" fill="#4b3a58"/><circle cx="213" cy="88" r="3" fill="#4b3a58"/>
+<path d="M197 99q8 7 16 0" stroke="#4b3a58" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M232 92h40" stroke="#e2586e" stroke-width="5" stroke-linecap="round"/>
+<path d="M270 80l16 12-16 12z" fill="#e2586e" stroke="#e2586e" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="296" cy="92" r="0" fill="none"/>
+<text x="292" y="64" text-anchor="middle" font-size="28" font-weight="800" fill="#e2586e">？</text>
+<text x="238" y="150" text-anchor="middle" font-size="15" font-weight="800" fill="#4b3a58">met …</text>
+<text x="238" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#8c7a99">相手が必要</text>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" font-family="'Zen Maru Gothic','M PLUS Rounded 1c','Hiragino Maru Gothic ProN',sans-serif">
+<rect width="320" height="200" rx="18" fill="#fff7d6"/>
+<path d="M130 178h60l-10-14h-40z" fill="#8b6cc0"/>
+<rect x="154" y="62" width="12" height="104" rx="5" fill="#b9a0e0"/>
+<rect x="58" y="54" width="204" height="10" rx="5" fill="#8b6cc0"/>
+<circle cx="160" cy="56" r="10" fill="#ffd36b" stroke="#8b6cc0" stroke-width="3"/>
+<path d="M70 62 54 112M70 62 94 112" stroke="#8b6cc0" stroke-width="3" fill="none"/>
+<path d="M250 62 226 112M250 62 266 112" stroke="#8b6cc0" stroke-width="3" fill="none"/>
+<path d="M40 112h70a35 22 0 0 1-70 0z" fill="#c9e4ff" stroke="#8b6cc0" stroke-width="3"/>
+<path d="M210 112h70a35 22 0 0 1-70 0z" fill="#ffc6d9" stroke="#8b6cc0" stroke-width="3"/>
+<text x="75" y="130" text-anchor="middle" font-size="22" font-weight="800" fill="#4b3a58">I</text>
+<text x="245" y="130" text-anchor="middle" font-size="17" font-weight="800" fill="#4b3a58">happy</text>
+<text x="160" y="36" text-anchor="middle" font-size="26" font-weight="800" fill="#e2586e">＝</text>
+</svg>
